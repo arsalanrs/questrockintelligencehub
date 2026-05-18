@@ -3,25 +3,77 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --beige: #f2ede3;
+  --beige-dark: #e8e0d0;
+  --cream: #faf7f2;
+  --green: #1a3c2e;
+  --green-mid: #2d6a4f;
+  --green-light: #52b788;
+  --green-accent: #74c69d;
+  --green-pale: #eaf7ef;
+  --blue: #1b3a5c;
+  --blue-mid: #2c6e9e;
+  --blue-light: #74b3ce;
+  --blue-pale: #ebf3fb;
+  --white: #ffffff;
+  --text-dark: #1a1a1a;
+  --text-muted: #6b6b6b;
+  --border: rgba(26, 60, 46, 0.1);
+  --border-card: rgba(0, 0, 0, 0.07);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+@layer base {
+  body {
+    @apply m-0 min-h-screen antialiased;
+    background: var(--beige);
+    color: var(--text-dark);
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hub-card:nth-child(1) {
+  animation: fadeUp 0.5s ease 0.05s both;
+}
+.hub-card:nth-child(2) {
+  animation: fadeUp 0.5s ease 0.12s both;
+}
+.hub-card:nth-child(3) {
+  animation: fadeUp 0.5s ease 0.19s both;
+}
+.hub-card:nth-child(4) {
+  animation: fadeUp 0.5s ease 0.26s both;
+}
+.hub-card:nth-child(5) {
+  animation: fadeUp 0.5s ease 0.33s both;
+}
+
+.nav-pulse {
+  animation: pulse 2s infinite;
 }
