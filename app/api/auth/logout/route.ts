@@ -7,7 +7,7 @@ async function signOutAndRedirect(request: Request) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   const loginUrl = new URL("/login", request.url);
-  let response = NextResponse.redirect(loginUrl);
+  const response = NextResponse.redirect(loginUrl);
 
   if (!url || !key) {
     return response;
