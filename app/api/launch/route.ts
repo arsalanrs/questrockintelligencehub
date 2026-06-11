@@ -6,40 +6,35 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
  * SSO launch route.
  *
  * Each app keeps its OWN Supabase project — data never moves.
- * Central Hub holds only the service-role key for each app so it can call
- * admin.generateLink() and produce a one-time magic link for the current user.
+ * Central Hub uses each app's service-role key to mint a session server-side,
+ * then redirects to that app's /auth/callback with sso_at + sso_rt.
  *
- * Special cases:
- *  - qrdashboard: Central Hub already uses QR Dashboard's Supabase, so we just
- *    pass the existing session tokens directly (same project, no magic link needed).
- *  - shapephonezap: No Supabase at all — we pass the Central Hub session token
- *    and the ShapePhoneZap callback validates it against Central Hub's Supabase.
+ * This avoids Supabase magic-link redirects (which depend on Site URL /
+ * Redirect URL config and often land on localhost:3000).
  */
 
 interface AppConfig {
   supabaseUrl: string;
   serviceRoleKey: string;
-  /** Where Supabase should redirect after magic-link verification */
-  ssoEntryUrl: string;
+  callbackUrl: string;
 }
 
 function getAppConfig(appId: string): AppConfig | null {
-  const map: Record<string, { urlEnv: string; keyEnv: string; entry: string }> = {
+  const map: Record<string, { urlEnv: string; keyEnv: string; callback: string }> = {
     "qr-income-bot": {
       urlEnv: "INCOME_BOT_SUPABASE_URL",
       keyEnv: "INCOME_BOT_SERVICE_ROLE_KEY",
-      entry: "https://qr-income-bot.vercel.app/auth/sso-entry",
+      callback: "https://qr-income-bot.vercel.app/auth/callback",
     },
     qrscoreboard: {
       urlEnv: "PIPELINE_SUPABASE_URL",
       keyEnv: "PIPELINE_SERVICE_ROLE_KEY",
-      entry: "https://qrscoreboard.vercel.app/auth/sso-entry",
+      callback: "https://qrscoreboard.vercel.app/auth/callback",
     },
     creditrepair: {
       urlEnv: "CREDIT_REPAIR_SUPABASE_URL",
       keyEnv: "CREDIT_REPAIR_SERVICE_ROLE_KEY",
-      // Credit Repair uses browser Supabase — magic link hash is handled automatically
-      entry: "https://creditrepairv4.vercel.app/",
+      callback: "https://creditrepairv4.vercel.app/auth/callback",
     },
   };
 
@@ -50,14 +45,69 @@ function getAppConfig(appId: string): AppConfig | null {
   const serviceRoleKey = process.env[cfg.keyEnv]?.trim();
   if (!supabaseUrl || !serviceRoleKey) return null;
 
-  return { supabaseUrl, serviceRoleKey, ssoEntryUrl: cfg.entry };
+  return { supabaseUrl, serviceRoleKey, callbackUrl: cfg.callback };
+}
+
+/** Mint a Supabase session for email using that app's service-role client. */
+async function mintSessionForApp(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  email: string
+): Promise<{ access_token: string; refresh_token: string } | null> {
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+  });
+
+  if (linkErr || !linkData?.properties) {
+    console.error("[launch] generateLink error:", linkErr?.message);
+    return null;
+  }
+
+  const { hashed_token, email_otp } = linkData.properties;
+
+  // Prefer token_hash verification (magic link path)
+  if (hashed_token) {
+    const { data: verified, error: verifyErr } = await admin.auth.verifyOtp({
+      type: "magiclink",
+      token_hash: hashed_token,
+    });
+    if (!verifyErr && verified.session) {
+      return {
+        access_token: verified.session.access_token,
+        refresh_token: verified.session.refresh_token,
+      };
+    }
+    console.error("[launch] verifyOtp (magiclink) error:", verifyErr?.message);
+  }
+
+  // Fallback: email OTP from generateLink response
+  if (email_otp) {
+    const { data: verified, error: verifyErr } = await admin.auth.verifyOtp({
+      type: "email",
+      email,
+      token: email_otp,
+    });
+    if (!verifyErr && verified.session) {
+      return {
+        access_token: verified.session.access_token,
+        refresh_token: verified.session.refresh_token,
+      };
+    }
+    console.error("[launch] verifyOtp (email) error:", verifyErr?.message);
+  }
+
+  return null;
 }
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const appId = searchParams.get("appId") ?? "";
 
-  // Get current Central Hub user
   const hubClient = await createSupabaseServerClient();
   const {
     data: { session },
@@ -69,7 +119,7 @@ export async function GET(request: NextRequest) {
 
   const userEmail = session.user.email!;
 
-  // ── QR Dashboard — same Supabase project as Central Hub ─────────────────
+  // QR Dashboard — same Supabase project as Central Hub
   if (appId === "qrdashboard") {
     const target = new URL("https://qrdashboard.vercel.app/auth/callback");
     target.searchParams.set("sso_at", session.access_token);
@@ -77,36 +127,28 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(target.toString());
   }
 
-  // ── ShapePhoneZap — no Supabase, HMAC session via token validation ───────
+  // ShapePhoneZap — validates Central Hub token, no Supabase on that app
   if (appId === "shapephonezap") {
     const target = new URL("https://shapephonezap.vercel.app/api/auth-callback");
     target.searchParams.set("sso_at", session.access_token);
     return NextResponse.redirect(target.toString());
   }
 
-  // ── All other apps — generate a magic link against their own Supabase ────
   const cfg = getAppConfig(appId);
   if (!cfg) {
     return new NextResponse(`Unknown or misconfigured appId: ${appId}`, { status: 400 });
   }
 
-  const adminClient = createClient(cfg.supabaseUrl, cfg.serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const { data, error } = await adminClient.auth.admin.generateLink({
-    type: "magiclink",
-    email: userEmail,
-    options: { redirectTo: cfg.ssoEntryUrl },
-  });
-
-  if (error || !data?.properties?.action_link) {
-    console.error("[launch] generateLink error:", error?.message);
+  const tokens = await mintSessionForApp(cfg.supabaseUrl, cfg.serviceRoleKey, userEmail);
+  if (!tokens) {
     return new NextResponse(
-      `Could not generate sign-in link for ${appId}. Make sure the user exists in that app's Supabase and the service role key is set correctly.`,
+      `Could not sign you into ${appId}. Make sure ${userEmail} exists in that app's Supabase Auth (Authentication → Users).`,
       { status: 500 }
     );
   }
 
-  return NextResponse.redirect(data.properties.action_link);
+  const target = new URL(cfg.callbackUrl);
+  target.searchParams.set("sso_at", tokens.access_token);
+  target.searchParams.set("sso_rt", tokens.refresh_token);
+  return NextResponse.redirect(target.toString());
 }
