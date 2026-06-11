@@ -4,10 +4,10 @@ import { ProjectGrid } from '@/components/ProjectGrid';
 import { Footer } from '@/components/Footer';
 import { projects } from '@/lib/projects';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { canAccessShapePhoneZap } from '@/lib/shapephonezap-access';
 
 export default async function Home() {
-  const liveCount = projects.filter((p) => p.status === 'live').length;
-
+  let userEmail: string | undefined;
   let userName: string | undefined;
   let userRole: string | undefined;
 
@@ -15,6 +15,7 @@ export default async function Home() {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      userEmail = user.email ?? undefined;
       const { data: profile } = await supabase
         .from('users')
         .select('full_name, role')
@@ -27,20 +28,25 @@ export default async function Home() {
     /* missing env or unauthenticated — middleware handles redirect */
   }
 
+  const visibleProjects = projects.filter(
+    (p) => p.id !== 'shapephonezap' || canAccessShapePhoneZap(userEmail)
+  );
+  const liveCount = visibleProjects.filter((p) => p.status === 'live').length;
+
   return (
     <>
       <Header liveCount={liveCount} userName={userName} userRole={userRole} />
       <main>
-        <Hero projectCount={projects.length} liveDeployCount={liveCount} />
+        <Hero projectCount={visibleProjects.length} liveDeployCount={liveCount} />
         <div className="mx-auto flex max-w-hub items-center gap-5 px-6 pb-6 pt-4 sm:px-12">
           <span className="whitespace-nowrap text-[11px] font-medium uppercase tracking-[0.12em] text-text-muted">
             All Platforms
           </span>
           <div className="h-px flex-1 bg-[var(--border)]" />
         </div>
-        <ProjectGrid projects={projects} />
+        <ProjectGrid projects={visibleProjects} />
       </main>
-      <Footer platformCount={projects.length} />
+      <Footer platformCount={visibleProjects.length} />
     </>
   );
 }

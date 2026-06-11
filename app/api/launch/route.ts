@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { canAccessShapePhoneZap } from "@/lib/shapephonezap-access";
 
 /**
  * SSO launch route.
@@ -180,6 +181,12 @@ export async function GET(request: NextRequest) {
   }
 
   if (appId === "shapephonezap") {
+    if (!canAccessShapePhoneZap(userEmail)) {
+      return new NextResponse(
+        "ShapePhoneZap is limited to authorized users (Sam, Nikk, and admins).",
+        { status: 403 }
+      );
+    }
     const target = new URL("https://shapephonezap.vercel.app/api/auth-callback");
     target.searchParams.set("sso_at", session.access_token);
     return NextResponse.redirect(target.toString());
