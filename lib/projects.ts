@@ -3,6 +3,7 @@ import {
   Calculator,
   Captions,
   CreditCard,
+  Headphones,
   LayoutDashboard,
   TableProperties,
   Trophy,
@@ -25,6 +26,20 @@ export type Project = {
 };
 
 export const projects: Project[] = [
+  {
+    id: 'mailer-lo-desk',
+    name: 'Mailer LO Desk',
+    url: 'https://questrock-inbound-api.vercel.app/mailer-lo/',
+    ssoUrl: '/api/launch?appId=mailer-lo-desk',
+    description:
+      'Thursday mailer calling desk—search imported leads, read scripts, assign LOs in Shape, and log outcomes without re-entering the desk password.',
+    tag: 'Inbound',
+    color: 'green',
+    icon: Headphones,
+    status: 'live',
+    lastCommit: 'Central Hub SSO via hub-sso',
+    lastCommitTime: 'Today',
+  },
   {
     id: 'shapephonezap',
     name: 'ShapePhoneZap',

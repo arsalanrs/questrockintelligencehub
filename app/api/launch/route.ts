@@ -180,6 +180,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(target.toString());
   }
 
+  if (appId === "mailer-lo-desk") {
+    const target = new URL(
+      "https://questrock-inbound-api.vercel.app/api/auth-callback"
+    );
+    target.searchParams.set("sso_at", session.access_token);
+    target.searchParams.set("next", "/mailer-lo/");
+    return NextResponse.redirect(target.toString());
+  }
+
   if (appId === "shapephonezap") {
     if (!canAccessShapePhoneZap(userEmail)) {
       return new NextResponse(
