@@ -3,13 +3,33 @@ import { Hero } from '@/components/Hero';
 import { ProjectGrid } from '@/components/ProjectGrid';
 import { Footer } from '@/components/Footer';
 import { projects } from '@/lib/projects';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export default function Home() {
+export default async function Home() {
   const liveCount = projects.filter((p) => p.status === 'live').length;
+
+  let userName: string | undefined;
+  let userRole: string | undefined;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('full_name, role')
+        .eq('id', user.id)
+        .maybeSingle();
+      userName = profile?.full_name ?? user.email?.split('@')[0];
+      userRole = profile?.role ?? undefined;
+    }
+  } catch {
+    /* missing env or unauthenticated — middleware handles redirect */
+  }
 
   return (
     <>
-      <Header liveCount={liveCount} />
+      <Header liveCount={liveCount} userName={userName} userRole={userRole} />
       <main>
         <Hero projectCount={projects.length} liveDeployCount={liveCount} />
         <div className="mx-auto flex max-w-hub items-center gap-5 px-6 pb-6 pt-4 sm:px-12">

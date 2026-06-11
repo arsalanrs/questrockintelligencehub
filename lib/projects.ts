@@ -12,6 +12,8 @@ export type Project = {
   id: string;
   name: string;
   url: string;
+  /** When set, clicking the card uses this URL (SSO launch) instead of url. */
+  ssoUrl?: string;
   description: string;
   tag: string;
   color: 'green' | 'blue';
@@ -27,6 +29,7 @@ export const projects: Project[] = [
     id: 'shapephonezap',
     name: 'ShapePhoneZap',
     url: 'https://shapephonezap.vercel.app',
+    ssoUrl: '/api/launch?appId=shapephonezap',
     description:
       'Turns call transcripts into structured fields—capture what was said on the phone and map it cleanly into the shapes your workflow needs.',
     tag: 'Outreach',
@@ -40,6 +43,7 @@ export const projects: Project[] = [
     id: 'qr-income-bot',
     name: 'QR Income Bot',
     url: 'https://qr-income-bot.vercel.app',
+    ssoUrl: '/api/launch?appId=qr-income-bot',
     description:
       'Calculates and tracks income tied to QR activity—roll up revenue, spot trends, and keep totals current without spreadsheet gymnastics.',
     tag: 'Automation',
@@ -53,6 +57,7 @@ export const projects: Project[] = [
     id: 'creditrepair',
     name: 'Credit Repair',
     url: 'https://creditrepairv4.vercel.app',
+    ssoUrl: '/api/launch?appId=creditrepair',
     description:
       'Credit repair workspace—review reports, log disputes and outcomes, and guide people step by step from intake to resolution.',
     tag: 'Finance',
@@ -66,6 +71,7 @@ export const projects: Project[] = [
     id: 'qrdashboard',
     name: 'QR Dashboard',
     url: 'https://qrdashboard.vercel.app',
+    ssoUrl: '/api/launch?appId=qrdashboard',
     description:
       'The wide-angle view—pulls metrics, pipelines, and connected data into one dashboard so anyone can see what is happening at a glance.',
     tag: 'Analytics',
@@ -79,6 +85,7 @@ export const projects: Project[] = [
     id: 'qrscoreboard',
     name: 'QR Scoreboard',
     url: 'https://qrscoreboard.vercel.app',
+    ssoUrl: '/api/launch?appId=qrscoreboard',
     description:
       'Live rankings and leaderboards—compare results, celebrate wins, and keep teams aligned on who is moving the needle.',
     tag: 'Performance',
