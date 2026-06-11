@@ -5,34 +5,41 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 /**
  * SSO launch route.
  *
- * Each app keeps its OWN Supabase project. Central Hub signs the user into that
- * project server-side (signInWithPassword), then redirects to /auth/callback
- * with sso_at + sso_rt — same pattern as QR Dashboard.
+ * Each app keeps its OWN Supabase project. Central Hub mints a session
+ * server-side, then redirects to /auth/callback with sso_at + sso_rt.
  *
- * No magic links → no localhost:3000 redirect issues.
+ * Accepts either ANON_KEY (signInWithPassword) or SERVICE_ROLE_KEY
+ * (generateLink + verifyOtp) — whichever you have in Vercel.
  */
 
 interface AppConfig {
   supabaseUrl: string;
-  anonKey: string;
+  anonKey?: string;
+  serviceRoleKey?: string;
   callbackUrl: string;
 }
 
 function getAppConfig(appId: string): AppConfig | null {
-  const map: Record<string, { urlEnv: string; anonEnv: string; callback: string }> = {
+  const map: Record<
+    string,
+    { urlEnv: string; anonEnv: string; serviceEnv: string; callback: string }
+  > = {
     "qr-income-bot": {
       urlEnv: "INCOME_BOT_SUPABASE_URL",
       anonEnv: "INCOME_BOT_SUPABASE_ANON_KEY",
+      serviceEnv: "INCOME_BOT_SERVICE_ROLE_KEY",
       callback: "https://qr-income-bot.vercel.app/auth/callback",
     },
     qrscoreboard: {
       urlEnv: "PIPELINE_SUPABASE_URL",
       anonEnv: "PIPELINE_SUPABASE_ANON_KEY",
+      serviceEnv: "PIPELINE_SERVICE_ROLE_KEY",
       callback: "https://qrscoreboard.vercel.app/auth/callback",
     },
     creditrepair: {
       urlEnv: "CREDIT_REPAIR_SUPABASE_URL",
       anonEnv: "CREDIT_REPAIR_SUPABASE_ANON_KEY",
+      serviceEnv: "CREDIT_REPAIR_SERVICE_ROLE_KEY",
       callback: "https://creditrepairv4.vercel.app/auth/callback",
     },
   };
@@ -42,17 +49,21 @@ function getAppConfig(appId: string): AppConfig | null {
 
   const supabaseUrl = process.env[cfg.urlEnv]?.trim();
   const anonKey = process.env[cfg.anonEnv]?.trim();
-  if (!supabaseUrl || !anonKey) return null;
+  const serviceRoleKey = process.env[cfg.serviceEnv]?.trim();
 
-  return { supabaseUrl, anonKey, callbackUrl: cfg.callback };
+  if (!supabaseUrl || (!anonKey && !serviceRoleKey)) return null;
+
+  return { supabaseUrl, anonKey, serviceRoleKey, callbackUrl: cfg.callback };
 }
 
-/** Sign into the target app's Supabase and return session tokens. */
-async function mintSessionForApp(
+type SessionTokens = { access_token: string; refresh_token: string };
+
+/** signInWithPassword via anon key — simplest path. */
+async function mintViaPassword(
   supabaseUrl: string,
   anonKey: string,
   email: string
-): Promise<{ access_token: string; refresh_token: string } | null> {
+): Promise<SessionTokens | null> {
   const password =
     process.env.SSO_BOOTSTRAP_PASSWORD?.trim() || "WelcomeToQuestRock1!";
 
@@ -76,6 +87,76 @@ async function mintSessionForApp(
   };
 }
 
+/** generateLink + verifyOtp via service role — works when only SERVICE_ROLE_KEY is set. */
+async function mintViaServiceRole(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  email: string
+): Promise<SessionTokens | null> {
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+  });
+
+  if (linkErr || !linkData?.properties) {
+    console.error("[launch] generateLink error:", linkErr?.message);
+    return null;
+  }
+
+  const { hashed_token, email_otp } = linkData.properties;
+
+  if (hashed_token) {
+    const { data: verified, error: verifyErr } = await admin.auth.verifyOtp({
+      type: "magiclink",
+      token_hash: hashed_token,
+    });
+    if (!verifyErr && verified.session) {
+      return {
+        access_token: verified.session.access_token,
+        refresh_token: verified.session.refresh_token,
+      };
+    }
+    console.error("[launch] verifyOtp (magiclink) error:", verifyErr?.message);
+  }
+
+  if (email_otp) {
+    const { data: verified, error: verifyErr } = await admin.auth.verifyOtp({
+      type: "email",
+      email,
+      token: email_otp,
+    });
+    if (!verifyErr && verified.session) {
+      return {
+        access_token: verified.session.access_token,
+        refresh_token: verified.session.refresh_token,
+      };
+    }
+    console.error("[launch] verifyOtp (email) error:", verifyErr?.message);
+  }
+
+  return null;
+}
+
+async function mintSessionForApp(
+  cfg: AppConfig,
+  email: string
+): Promise<SessionTokens | null> {
+  if (cfg.anonKey) {
+    const tokens = await mintViaPassword(cfg.supabaseUrl, cfg.anonKey, email);
+    if (tokens) return tokens;
+  }
+
+  if (cfg.serviceRoleKey) {
+    return mintViaServiceRole(cfg.supabaseUrl, cfg.serviceRoleKey, email);
+  }
+
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const appId = searchParams.get("appId") ?? "";
@@ -91,7 +172,6 @@ export async function GET(request: NextRequest) {
 
   const userEmail = session.user.email!;
 
-  // QR Dashboard — same Supabase project as Central Hub
   if (appId === "qrdashboard") {
     const target = new URL("https://qrdashboard.vercel.app/auth/callback");
     target.searchParams.set("sso_at", session.access_token);
@@ -99,7 +179,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(target.toString());
   }
 
-  // ShapePhoneZap — validate Central Hub token, set HMAC cookie (no Supabase on app)
   if (appId === "shapephonezap") {
     const target = new URL("https://shapephonezap.vercel.app/api/auth-callback");
     target.searchParams.set("sso_at", session.access_token);
@@ -109,15 +188,15 @@ export async function GET(request: NextRequest) {
   const cfg = getAppConfig(appId);
   if (!cfg) {
     return new NextResponse(
-      `Unknown or misconfigured appId: ${appId}. Check Central Hub env vars (e.g. ${appId === "qr-income-bot" ? "INCOME_BOT_SUPABASE_URL + INCOME_BOT_SUPABASE_ANON_KEY" : "per-app SUPABASE_URL + ANON_KEY"}).`,
+      `Unknown or misconfigured appId: ${appId}. Set *_SUPABASE_URL plus either *_SUPABASE_ANON_KEY or *_SERVICE_ROLE_KEY on Central Hub.`,
       { status: 400 }
     );
   }
 
-  const tokens = await mintSessionForApp(cfg.supabaseUrl, cfg.anonKey, userEmail);
+  const tokens = await mintSessionForApp(cfg, userEmail);
   if (!tokens) {
     return new NextResponse(
-      `Could not sign you into ${appId}. Make sure ${userEmail} exists in that app's Supabase Auth with password WelcomeToQuestRock1! (or set SSO_BOOTSTRAP_PASSWORD on Central Hub).`,
+      `Could not sign you into ${appId}. Make sure ${userEmail} exists in that app's Supabase Auth (Authentication → Users) with password WelcomeToQuestRock1!.`,
       { status: 500 }
     );
   }
