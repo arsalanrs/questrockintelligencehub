@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { SignOutButton } from '@/components/SignOutButton';
 
 type HeaderProps = {
   liveCount: number;
@@ -47,14 +48,7 @@ export function Header({ liveCount, userName, userRole }: HeaderProps) {
                 </span>
               )}
             </div>
-            <form action="/api/auth/logout" method="POST">
-              <button
-                type="submit"
-                className="rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white/70 hover:text-white hover:border-white/40 transition-colors"
-              >
-                Sign out
-              </button>
-            </form>
+            <SignOutButton />
           </>
         ) : (
           <>
