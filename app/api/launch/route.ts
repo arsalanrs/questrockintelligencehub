@@ -5,35 +5,34 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 /**
  * SSO launch route.
  *
- * Each app keeps its OWN Supabase project — data never moves.
- * Central Hub uses each app's service-role key to mint a session server-side,
- * then redirects to that app's /auth/callback with sso_at + sso_rt.
+ * Each app keeps its OWN Supabase project. Central Hub signs the user into that
+ * project server-side (signInWithPassword), then redirects to /auth/callback
+ * with sso_at + sso_rt — same pattern as QR Dashboard.
  *
- * This avoids Supabase magic-link redirects (which depend on Site URL /
- * Redirect URL config and often land on localhost:3000).
+ * No magic links → no localhost:3000 redirect issues.
  */
 
 interface AppConfig {
   supabaseUrl: string;
-  serviceRoleKey: string;
+  anonKey: string;
   callbackUrl: string;
 }
 
 function getAppConfig(appId: string): AppConfig | null {
-  const map: Record<string, { urlEnv: string; keyEnv: string; callback: string }> = {
+  const map: Record<string, { urlEnv: string; anonEnv: string; callback: string }> = {
     "qr-income-bot": {
       urlEnv: "INCOME_BOT_SUPABASE_URL",
-      keyEnv: "INCOME_BOT_SERVICE_ROLE_KEY",
+      anonEnv: "INCOME_BOT_SUPABASE_ANON_KEY",
       callback: "https://qr-income-bot.vercel.app/auth/callback",
     },
     qrscoreboard: {
       urlEnv: "PIPELINE_SUPABASE_URL",
-      keyEnv: "PIPELINE_SERVICE_ROLE_KEY",
+      anonEnv: "PIPELINE_SUPABASE_ANON_KEY",
       callback: "https://qrscoreboard.vercel.app/auth/callback",
     },
     creditrepair: {
       urlEnv: "CREDIT_REPAIR_SUPABASE_URL",
-      keyEnv: "CREDIT_REPAIR_SERVICE_ROLE_KEY",
+      anonEnv: "CREDIT_REPAIR_SUPABASE_ANON_KEY",
       callback: "https://creditrepairv4.vercel.app/auth/callback",
     },
   };
@@ -42,66 +41,39 @@ function getAppConfig(appId: string): AppConfig | null {
   if (!cfg) return null;
 
   const supabaseUrl = process.env[cfg.urlEnv]?.trim();
-  const serviceRoleKey = process.env[cfg.keyEnv]?.trim();
-  if (!supabaseUrl || !serviceRoleKey) return null;
+  const anonKey = process.env[cfg.anonEnv]?.trim();
+  if (!supabaseUrl || !anonKey) return null;
 
-  return { supabaseUrl, serviceRoleKey, callbackUrl: cfg.callback };
+  return { supabaseUrl, anonKey, callbackUrl: cfg.callback };
 }
 
-/** Mint a Supabase session for email using that app's service-role client. */
+/** Sign into the target app's Supabase and return session tokens. */
 async function mintSessionForApp(
   supabaseUrl: string,
-  serviceRoleKey: string,
+  anonKey: string,
   email: string
 ): Promise<{ access_token: string; refresh_token: string } | null> {
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
+  const password =
+    process.env.SSO_BOOTSTRAP_PASSWORD?.trim() || "WelcomeToQuestRock1!";
+
+  const client = createClient(supabaseUrl, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-    type: "magiclink",
+  const { data, error } = await client.auth.signInWithPassword({
     email,
+    password,
   });
 
-  if (linkErr || !linkData?.properties) {
-    console.error("[launch] generateLink error:", linkErr?.message);
+  if (error || !data.session) {
+    console.error("[launch] signInWithPassword error:", error?.message);
     return null;
   }
 
-  const { hashed_token, email_otp } = linkData.properties;
-
-  // Prefer token_hash verification (magic link path)
-  if (hashed_token) {
-    const { data: verified, error: verifyErr } = await admin.auth.verifyOtp({
-      type: "magiclink",
-      token_hash: hashed_token,
-    });
-    if (!verifyErr && verified.session) {
-      return {
-        access_token: verified.session.access_token,
-        refresh_token: verified.session.refresh_token,
-      };
-    }
-    console.error("[launch] verifyOtp (magiclink) error:", verifyErr?.message);
-  }
-
-  // Fallback: email OTP from generateLink response
-  if (email_otp) {
-    const { data: verified, error: verifyErr } = await admin.auth.verifyOtp({
-      type: "email",
-      email,
-      token: email_otp,
-    });
-    if (!verifyErr && verified.session) {
-      return {
-        access_token: verified.session.access_token,
-        refresh_token: verified.session.refresh_token,
-      };
-    }
-    console.error("[launch] verifyOtp (email) error:", verifyErr?.message);
-  }
-
-  return null;
+  return {
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -127,7 +99,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(target.toString());
   }
 
-  // ShapePhoneZap — validates Central Hub token, no Supabase on that app
+  // ShapePhoneZap — validate Central Hub token, set HMAC cookie (no Supabase on app)
   if (appId === "shapephonezap") {
     const target = new URL("https://shapephonezap.vercel.app/api/auth-callback");
     target.searchParams.set("sso_at", session.access_token);
@@ -136,13 +108,16 @@ export async function GET(request: NextRequest) {
 
   const cfg = getAppConfig(appId);
   if (!cfg) {
-    return new NextResponse(`Unknown or misconfigured appId: ${appId}`, { status: 400 });
+    return new NextResponse(
+      `Unknown or misconfigured appId: ${appId}. Check Central Hub env vars (e.g. ${appId === "qr-income-bot" ? "INCOME_BOT_SUPABASE_URL + INCOME_BOT_SUPABASE_ANON_KEY" : "per-app SUPABASE_URL + ANON_KEY"}).`,
+      { status: 400 }
+    );
   }
 
-  const tokens = await mintSessionForApp(cfg.supabaseUrl, cfg.serviceRoleKey, userEmail);
+  const tokens = await mintSessionForApp(cfg.supabaseUrl, cfg.anonKey, userEmail);
   if (!tokens) {
     return new NextResponse(
-      `Could not sign you into ${appId}. Make sure ${userEmail} exists in that app's Supabase Auth (Authentication → Users).`,
+      `Could not sign you into ${appId}. Make sure ${userEmail} exists in that app's Supabase Auth with password WelcomeToQuestRock1! (or set SSO_BOOTSTRAP_PASSWORD on Central Hub).`,
       { status: 500 }
     );
   }
