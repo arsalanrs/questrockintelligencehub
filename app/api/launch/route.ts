@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { canAccessShapePhoneZap } from "@/lib/shapephonezap-access";
+import { canAccessCallTracker } from "@/lib/call-tracker-access";
 
 /**
  * SSO launch route.
@@ -186,6 +187,21 @@ export async function GET(request: NextRequest) {
     );
     target.searchParams.set("sso_at", session.access_token);
     target.searchParams.set("next", "/mailer-lo/");
+    return NextResponse.redirect(target.toString());
+  }
+
+  if (appId === "call-tracker") {
+    if (!canAccessCallTracker(userEmail)) {
+      return new NextResponse(
+        "Call Tracker is limited to Arsalan and Nikk.",
+        { status: 403 }
+      );
+    }
+    const target = new URL(
+      "https://questrock-inbound-api.vercel.app/api/auth-callback"
+    );
+    target.searchParams.set("sso_at", session.access_token);
+    target.searchParams.set("next", "/call-tracker/");
     return NextResponse.redirect(target.toString());
   }
 

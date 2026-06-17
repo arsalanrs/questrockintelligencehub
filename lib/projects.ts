@@ -27,12 +27,26 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    id: 'call-tracker',
+    name: 'Call Tracker',
+    url: 'https://questrock-inbound-api.vercel.app/call-tracker/',
+    ssoUrl: '/api/launch?appId=call-tracker',
+    description:
+      'Admin live feed of every inbound and QuestMail call—borrower, LO, channel, Shape link, and AI status. Arsalan & Nikk only.',
+    tag: 'Inbound',
+    color: 'blue',
+    icon: Headphones,
+    status: 'live',
+    lastCommit: 'Admin call tracker desk',
+    lastCommitTime: 'Today',
+  },
+  {
     id: 'mailer-lo-desk',
-    name: 'Mailer LO Desk',
+    name: 'QuestMail LO Desk',
     url: 'https://questrock-inbound-api.vercel.app/mailer-lo/',
     ssoUrl: '/api/launch?appId=mailer-lo-desk',
     description:
-      'Thursday mailer calling desk—search imported leads, read scripts, assign LOs in Shape, and log outcomes without re-entering the desk password.',
+      'QuestMail calling desk—search imported mailer leads by offer code, open Shape prospects, read call scripts, and log outcomes. SSO from Intelligence Hub.',
     tag: 'Inbound',
     color: 'green',
     icon: Headphones,
