@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
   if (appId === "call-tracker") {
     if (!canAccessCallTracker(userEmail)) {
       return new NextResponse(
-        "Call Tracker is limited to Arsalan and Nikk.",
+        "Call Tracker is limited to authorized admins.",
         { status: 403 }
       );
     }

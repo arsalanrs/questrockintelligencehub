@@ -32,7 +32,7 @@ export const projects: Project[] = [
     url: 'https://questrock-inbound-api.vercel.app/call-tracker/',
     ssoUrl: '/api/launch?appId=call-tracker',
     description:
-      'Admin live feed of every inbound and QuestMail call—borrower, LO, channel, Shape link, and AI status. Arsalan & Nikk only.',
+      'Admin live feed of every inbound and QuestMail call—borrower, LO, channel, Shape link, and AI status.',
     tag: 'Inbound',
     color: 'blue',
     icon: Headphones,

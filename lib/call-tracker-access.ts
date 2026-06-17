@@ -1,7 +1,6 @@
-/** Who can see and launch Call Tracker from Central Hub. */
+/** Who can see and launch Call Tracker from Central Hub (Arsalan only — Nikk login is shared). */
 const DEFAULT_ALLOWED = [
   'arashid@questrock.com',
-  'nikksmith@questrock.com',
 ];
 
 export function getCallTrackerAllowedEmails(): Set<string> {
