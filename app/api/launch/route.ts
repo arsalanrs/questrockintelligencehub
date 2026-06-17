@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { canAccessShapePhoneZap } from "@/lib/shapephonezap-access";
 import { canAccessCallTracker } from "@/lib/call-tracker-access";
+import { canAccessQRDashboard } from "@/lib/qrdashboard-access";
 
 /**
  * SSO launch route.
@@ -175,6 +176,12 @@ export async function GET(request: NextRequest) {
   const userEmail = session.user.email!;
 
   if (appId === "qrdashboard") {
+    if (!canAccessQRDashboard(userEmail)) {
+      return new NextResponse(
+        "QR Dashboard is limited to authorized users.",
+        { status: 403 }
+      );
+    }
     const target = new URL("https://qrdashboard.vercel.app/auth/callback");
     target.searchParams.set("sso_at", session.access_token);
     target.searchParams.set("sso_rt", session.refresh_token);

@@ -6,6 +6,7 @@ import { projects } from '@/lib/projects';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { canAccessShapePhoneZap } from '@/lib/shapephonezap-access';
 import { canAccessCallTracker } from '@/lib/call-tracker-access';
+import { canAccessQRDashboard } from '@/lib/qrdashboard-access';
 
 export default async function Home() {
   let userEmail: string | undefined;
@@ -32,6 +33,7 @@ export default async function Home() {
   const visibleProjects = projects.filter((p) => {
     if (p.id === 'shapephonezap') return canAccessShapePhoneZap(userEmail);
     if (p.id === 'call-tracker') return canAccessCallTracker(userEmail);
+    if (p.id === 'qrdashboard') return canAccessQRDashboard(userEmail);
     return true;
   });
   const liveCount = visibleProjects.filter((p) => p.status === 'live').length;
