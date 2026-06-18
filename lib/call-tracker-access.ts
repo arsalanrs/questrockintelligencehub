@@ -1,22 +1,28 @@
-import { getExecutiveAdminEmails } from './executive-access';
+import { getExecutiveAdminEmails, isExecutiveAdmin } from './executive-access';
 
 /** Executives + Jason Friday (manager). */
 const DEFAULT_EXTRA = ['jfriday@questrock.com'];
 
 export function getCallTrackerAllowedEmails(): Set<string> {
+  const allowed = new Set<string>([
+    ...Array.from(getExecutiveAdminEmails()),
+    ...DEFAULT_EXTRA,
+  ]);
+
   const fromEnv = process.env.CALL_TRACKER_ALLOWED_EMAILS?.trim();
   if (fromEnv) {
-    return new Set(
-      fromEnv
-        .split(',')
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean),
-    );
+    for (const entry of fromEnv.split(',')) {
+      const email = entry.trim().toLowerCase();
+      if (email) allowed.add(email);
+    }
   }
-  return new Set([...getExecutiveAdminEmails(), ...DEFAULT_EXTRA]);
+
+  return allowed;
 }
 
 export function canAccessCallTracker(email: string | undefined | null): boolean {
   if (!email) return false;
-  return getCallTrackerAllowedEmails().has(email.trim().toLowerCase());
+  const normalized = email.trim().toLowerCase();
+  if (isExecutiveAdmin(normalized)) return true;
+  return getCallTrackerAllowedEmails().has(normalized);
 }
