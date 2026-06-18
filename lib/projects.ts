@@ -1,9 +1,11 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  Building2,
   Calculator,
   Captions,
   CreditCard,
   Headphones,
+  Landmark,
   LayoutDashboard,
   TableProperties,
   Trophy,
@@ -26,6 +28,32 @@ export type Project = {
 };
 
 export const projects: Project[] = [
+  {
+    id: 'shape-crm',
+    name: 'Shape CRM',
+    url: 'https://secure.setshape.com/login',
+    description:
+      'Sign in to Shape—prospects, pipeline, notes, and LO assignments. Use after inbound or QuestMail calls to send applications.',
+    tag: 'CRM',
+    color: 'green',
+    icon: Building2,
+    status: 'live',
+    lastCommit: 'secure.setshape.com',
+    lastCommitTime: 'Always on',
+  },
+  {
+    id: 'lendingpad',
+    name: 'LendingPad LOS',
+    url: 'https://prod.lendingpad.com/questrock-llc/login',
+    description:
+      'QuestRock loan origination—structure deals, upload docs, track conditions, and move files to closing.',
+    tag: 'LOS',
+    color: 'blue',
+    icon: Landmark,
+    status: 'live',
+    lastCommit: 'QuestRock LLC portal',
+    lastCommitTime: 'Always on',
+  },
   {
     id: 'call-tracker',
     name: 'Call Tracker',
