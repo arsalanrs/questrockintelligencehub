@@ -1,16 +1,19 @@
-/** Who can see and launch ShapePhoneZap from Central Hub. */
-const DEFAULT_ALLOWED = [
-  'arashid@questrock.com',
-  'sam@questrock.com',
-  'nikksmith@questrock.com',
-];
+import { getExecutiveAdminEmails } from './executive-access';
+
+/** Executives + Sam (ops). */
+const DEFAULT_EXTRA = ['sam@questrock.com'];
 
 export function getShapePhoneZapAllowedEmails(): Set<string> {
   const fromEnv = process.env.SHAPEPHONEZAP_ALLOWED_EMAILS?.trim();
-  const list = fromEnv
-    ? fromEnv.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
-    : DEFAULT_ALLOWED;
-  return new Set(list.map((e) => e.toLowerCase()));
+  if (fromEnv) {
+    return new Set(
+      fromEnv
+        .split(',')
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean),
+    );
+  }
+  return new Set([...getExecutiveAdminEmails(), ...DEFAULT_EXTRA]);
 }
 
 export function canAccessShapePhoneZap(email: string | undefined | null): boolean {
