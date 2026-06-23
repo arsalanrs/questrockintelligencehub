@@ -3,6 +3,7 @@ import {
   Building2,
   Calculator,
   Captions,
+  ClipboardList,
   CreditCard,
   Headphones,
   Landmark,
@@ -151,5 +152,18 @@ export const projects: Project[] = [
     status: 'live',
     lastCommit: 'Committed team roster for scoreboard roles',
     lastCommitTime: 'Apr 8',
+  },
+  {
+    id: 'airtable-form',
+    name: 'QuestRock Form',
+    url: 'https://airtable.com/appAiJBdKisyaJW49/pagaZLLv9nFuTs4Jm/form',
+    description:
+      'Shared Airtable form—submit requests, updates, and field entries. Visible to all QuestRock roles from the hub.',
+    tag: 'Forms',
+    color: 'green',
+    icon: ClipboardList,
+    status: 'live',
+    lastCommit: 'Airtable shared form',
+    lastCommitTime: 'Always on',
   },
 ];
