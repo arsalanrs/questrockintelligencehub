@@ -56,6 +56,19 @@ export const projects: Project[] = [
     lastCommitTime: 'Always on',
   },
   {
+    id: 'investor-hub',
+    name: 'QuestRock Investor Hub',
+    url: 'https://airtable.com/appAiJBdKisyaJW49/pagaZLLv9nFuTs4Jm/form',
+    description:
+      'Investor intake and updates—submit deals, requests, and field entries via the shared QuestRock Investor Hub form.',
+    tag: 'Investor',
+    color: 'green',
+    icon: ClipboardList,
+    status: 'live',
+    lastCommit: 'Airtable Investor Hub',
+    lastCommitTime: 'Always on',
+  },
+  {
     id: 'call-tracker',
     name: 'Call Tracker',
     url: 'https://questrock-inbound-api.vercel.app/call-tracker/',
@@ -152,18 +165,5 @@ export const projects: Project[] = [
     status: 'live',
     lastCommit: 'Committed team roster for scoreboard roles',
     lastCommitTime: 'Apr 8',
-  },
-  {
-    id: 'airtable-form',
-    name: 'QuestRock Form',
-    url: 'https://airtable.com/appAiJBdKisyaJW49/pagaZLLv9nFuTs4Jm/form',
-    description:
-      'Shared Airtable form—submit requests, updates, and field entries. Visible to all QuestRock roles from the hub.',
-    tag: 'Forms',
-    color: 'green',
-    icon: ClipboardList,
-    status: 'live',
-    lastCommit: 'Airtable shared form',
-    lastCommitTime: 'Always on',
   },
 ];
