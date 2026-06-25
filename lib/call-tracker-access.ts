@@ -1,7 +1,7 @@
 import { getExecutiveAdminEmails, isExecutiveAdmin } from './executive-access';
 
-/** Executives + Jason Friday (manager). */
-const DEFAULT_EXTRA = ['jfriday@questrock.com'];
+/** Executives + managers with Call Tracker access. */
+const DEFAULT_EXTRA = ['jfriday@questrock.com', 'bastianjohnston@questrock.com'];
 
 export function getCallTrackerAllowedEmails(): Set<string> {
   const allowed = new Set<string>([
