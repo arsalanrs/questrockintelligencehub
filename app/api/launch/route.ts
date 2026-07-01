@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { canAccessShapePhoneZap } from "@/lib/shapephonezap-access";
 import { canAccessCallTracker } from "@/lib/call-tracker-access";
 import { canAccessQRDashboard } from "@/lib/qrdashboard-access";
+import { canAccessVerificationBot } from "@/lib/verificationbot-access";
 
 /**
  * SSO launch route.
@@ -174,6 +175,35 @@ export async function GET(request: NextRequest) {
   }
 
   const userEmail = session.user.email!;
+
+  if (appId === "verificationbot") {
+    // Role check: pull from shared QR Supabase, with email fallback for executives
+    const qrUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const qrKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    let userRole: string | null = null;
+    if (qrUrl && qrKey) {
+      const qrAdmin = createClient(qrUrl, qrKey, { auth: { persistSession: false } });
+      const { data: profile } = await qrAdmin
+        .from("users")
+        .select("role")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      userRole = profile?.role ?? null;
+    }
+    if (!canAccessVerificationBot(userRole, userEmail)) {
+      return new NextResponse(
+        "Verification Bot is limited to processors and executives.",
+        { status: 403 }
+      );
+    }
+    // Verificationbot shares the same QR Supabase — pass hub session tokens directly
+    const vbotCallback = process.env.VERIFICATION_BOT_CALLBACK_URL?.trim()
+      ?? "https://verificationbot.vercel.app/auth/callback";
+    const target = new URL(vbotCallback);
+    target.searchParams.set("sso_at", session.access_token);
+    target.searchParams.set("sso_rt", session.refresh_token);
+    return NextResponse.redirect(target.toString());
+  }
 
   if (appId === "qrdashboard") {
     if (!canAccessQRDashboard(userEmail)) {
