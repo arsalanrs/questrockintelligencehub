@@ -1,4 +1,4 @@
-import { ActivityFeed } from '@/components/ActivityFeed';
+import { HubSidebarPanel } from '@/components/HubSidebarPanel';
 
 type HeroProps = {
   projectCount: number;
@@ -46,7 +46,7 @@ export function Hero({ projectCount, liveDeployCount }: HeroProps) {
           </div>
         </div>
       </div>
-      <ActivityFeed />
+      <HubSidebarPanel />
     </section>
   );
 }

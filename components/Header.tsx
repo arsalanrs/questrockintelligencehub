@@ -48,6 +48,12 @@ export function Header({ liveCount, userName, userRole }: HeaderProps) {
                 </span>
               )}
             </div>
+            <Link
+              href="/support"
+              className="whitespace-nowrap text-xs font-normal text-white/55 transition-colors hover:text-white sm:text-sm"
+            >
+              IT Support
+            </Link>
             <SignOutButton />
           </>
         ) : (

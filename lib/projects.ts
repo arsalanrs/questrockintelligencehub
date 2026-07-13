@@ -8,6 +8,8 @@ import {
   Headphones,
   Landmark,
   LayoutDashboard,
+  LifeBuoy,
+  ShieldCheck,
   TableProperties,
   Trophy,
 } from 'lucide-react';
@@ -29,6 +31,19 @@ export type Project = {
 };
 
 export const projects: Project[] = [
+  {
+    id: 'it-support',
+    name: 'IT Support',
+    url: '/support',
+    description:
+      'Submit IT tickets from the Hub — Shape, SSO, dashboards, email, or device issues routed to concierge@questrock.com.',
+    tag: 'Internal',
+    color: 'green',
+    icon: LifeBuoy,
+    status: 'live',
+    lastCommit: 'Formspree → concierge',
+    lastCommitTime: 'Today',
+  },
   {
     id: 'shape-crm',
     name: 'Shape CRM',
@@ -151,6 +166,20 @@ export const projects: Project[] = [
     status: 'live',
     lastCommit: 'Multi-user sync, migrations, and tooltips',
     lastCommitTime: 'Mar 29',
+  },
+  {
+    id: 'verificationbot',
+    name: 'Verification Bot',
+    url: 'https://verificationbot.vercel.app',
+    ssoUrl: '/api/launch?appId=verificationbot',
+    description:
+      'AI-powered loan eligibility pre-check — load a file, pull credit and conditions, and verify against Conforming, FHA, VA, USDA, Jumbo, and Non-QM guidelines in seconds.',
+    tag: 'Processing',
+    color: 'green',
+    icon: ShieldCheck,
+    status: 'building',
+    lastCommit: 'GPT-4o guideline verification engine',
+    lastCommitTime: 'Today',
   },
   {
     id: 'qrscoreboard',
