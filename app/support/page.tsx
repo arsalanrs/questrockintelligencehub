@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export const metadata = {
   title: 'IT Support — QuestRock Intelligence Hub',
-  description: 'Submit IT support tickets to QuestRock concierge.',
+  description: 'Submit IT support tickets to QuestRock Systems.',
 };
 
 export default async function SupportPage() {
@@ -50,7 +50,7 @@ export default async function SupportPage() {
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-muted">
             Shape, Hub SSO, Call Tracker, dashboards, email, or device issues — describe the problem and
-            concierge will triage. Urgent production outages: mark priority <strong>Urgent</strong> and call
+            Systems will triage. Urgent production outages: mark priority <strong>Urgent</strong> and call
             the ops line if you have one.
           </p>
         </div>

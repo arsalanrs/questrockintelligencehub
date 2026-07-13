@@ -36,12 +36,12 @@ export const projects: Project[] = [
     name: 'IT Support',
     url: '/support',
     description:
-      'Submit IT tickets from the Hub — Shape, SSO, dashboards, email, or device issues routed to concierge@questrock.com.',
+      'Submit IT tickets from the Hub — Shape, SSO, dashboards, email, or device issues routed to arashid@questrock.com.',
     tag: 'Internal',
     color: 'green',
     icon: LifeBuoy,
     status: 'live',
-    lastCommit: 'Formspree → concierge',
+    lastCommit: 'Formspree → Systems',
     lastCommitTime: 'Today',
   },
   {

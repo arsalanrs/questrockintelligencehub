@@ -43,11 +43,11 @@ export function SupportForm() {
       <div className="rounded-2xl border border-[rgba(82,183,136,0.35)] bg-green-pale px-6 py-8 text-center">
         <p className="font-display text-lg font-semibold text-green">Ticket submitted</p>
         <p className="mt-2 text-sm text-text-muted">
-          Concierge will receive your request at{' '}
-          <a href="mailto:concierge@questrock.com" className="text-green-mid underline">
-            concierge@questrock.com
+          Your ticket was sent to{' '}
+          <a href="mailto:arashid@questrock.com" className="text-green-mid underline">
+            arashid@questrock.com
           </a>
-          . You should get a confirmation shortly.
+          {' '}(Head of Systems). You should get a confirmation shortly.
         </p>
         <button
           type="button"
@@ -165,10 +165,10 @@ export function SupportForm() {
 
       <p className="text-xs text-text-muted">
         Tickets route to{' '}
-        <a href="mailto:concierge@questrock.com" className="text-green-mid underline">
-          concierge@questrock.com
+        <a href="mailto:arashid@questrock.com" className="text-green-mid underline">
+          arashid@questrock.com
         </a>{' '}
-        via Formspree. For password resets on external systems (Shape, LendingPad), include your QuestRock email.
+        (Head of Systems) via Formspree. For password resets on external systems (Shape, LendingPad), include your QuestRock email.
       </p>
     </form>
   );

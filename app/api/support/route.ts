@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const DEFAULT_TO = 'concierge@questrock.com';
+const DEFAULT_NOTIFY = 'arashid@questrock.com';
 
 type SupportBody = {
   name?: string;
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     description,
     ``,
     `—`,
-    `Route replies to submitter. Formspree notify: ${process.env.IT_SUPPORT_NOTIFY_EMAIL?.trim() || DEFAULT_TO}`,
+    `Route replies to submitter. IT Systems: ${process.env.IT_SUPPORT_NOTIFY_EMAIL?.trim() || DEFAULT_NOTIFY}`,
   ].join('\n');
 
   const res = await fetch(endpoint, {
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       priority,
       subject,
       message,
-      notify_to: process.env.IT_SUPPORT_NOTIFY_EMAIL?.trim() || DEFAULT_TO,
+      notify_to: process.env.IT_SUPPORT_NOTIFY_EMAIL?.trim() || DEFAULT_NOTIFY,
     }),
   });
 
