@@ -20,9 +20,13 @@ export function getCallTrackerAllowedEmails(): Set<string> {
   return allowed;
 }
 
+/** Block list — no Call Tracker even for executives. */
+const CALL_TRACKER_BLOCKED = new Set(['bmedley@questrock.com']);
+
 export function canAccessCallTracker(email: string | undefined | null): boolean {
   if (!email) return false;
   const normalized = email.trim().toLowerCase();
+  if (CALL_TRACKER_BLOCKED.has(normalized)) return false;
   if (isExecutiveAdmin(normalized)) return true;
   return getCallTrackerAllowedEmails().has(normalized);
 }
