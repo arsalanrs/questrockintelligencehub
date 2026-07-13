@@ -32,7 +32,6 @@ export function SupportForm() {
       const data = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setState('success');
-      e.currentTarget.reset();
     } catch (err) {
       setState('error');
       setError(err instanceof Error ? err.message : 'Could not submit ticket.');

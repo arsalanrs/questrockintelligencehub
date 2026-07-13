@@ -12,16 +12,9 @@ type SupportBody = {
 };
 
 export async function POST(request: Request) {
-  const endpoint = process.env.FORMSPREE_IT_SUPPORT_ENDPOINT?.trim();
-  if (!endpoint) {
-    return NextResponse.json(
-      {
-        error:
-          'IT support form is not configured. Set FORMSPREE_IT_SUPPORT_ENDPOINT (Formspree form URL) in Vercel env.',
-      },
-      { status: 503 }
-    );
-  }
+  const endpoint =
+    process.env.FORMSPREE_IT_SUPPORT_ENDPOINT?.trim() ||
+    'https://formspree.io/f/xzdnbzky';
 
   let body: SupportBody;
   try {
