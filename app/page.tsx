@@ -32,6 +32,7 @@ export default async function Home() {
   }
 
   const visibleProjects = projects.filter((p) => {
+    if (p.id === 'it-support') return false;
     if (p.id === 'shapephonezap') return canAccessShapePhoneZap(userEmail);
     if (p.id === 'call-tracker') return canAccessCallTracker(userEmail);
     if (p.id === 'qrdashboard') return canAccessQRDashboard(userEmail);
