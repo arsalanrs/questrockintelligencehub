@@ -68,8 +68,11 @@ async function mintViaPassword(
   anonKey: string,
   email: string
 ): Promise<SessionTokens | null> {
-  const password =
-    process.env.SSO_BOOTSTRAP_PASSWORD?.trim() || "WelcomeToQuestRock1!";
+  const password = process.env.SSO_BOOTSTRAP_PASSWORD?.trim();
+  if (!password) {
+    console.error("[launch] SSO_BOOTSTRAP_PASSWORD is not set on Central Hub");
+    return null;
+  }
 
   const client = createClient(supabaseUrl, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -159,6 +162,18 @@ async function mintSessionForApp(
   }
 
   return null;
+}
+
+function ssoFailureResponse(appId: string): NextResponse {
+  return new NextResponse(
+    [
+      `Could not sign you into ${appId}.`,
+      "The app may be temporarily unavailable (for example, if its database is paused).",
+      "Submit an IT ticket from the Intelligence Hub, or try again later.",
+      "Do not share passwords in tickets — Systems will reset access securely.",
+    ].join(" "),
+    { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } }
+  );
 }
 
 export async function GET(request: NextRequest) {
@@ -264,10 +279,7 @@ export async function GET(request: NextRequest) {
 
   const tokens = await mintSessionForApp(cfg, userEmail);
   if (!tokens) {
-    return new NextResponse(
-      `Could not sign you into ${appId}. Make sure ${userEmail} exists in that app's Supabase Auth (Authentication → Users) with password WelcomeToQuestRock1!.`,
-      { status: 500 }
-    );
+    return ssoFailureResponse(appId);
   }
 
   const target = new URL(cfg.callbackUrl);

@@ -43,11 +43,7 @@ export function SupportForm() {
       <div className="rounded-2xl border border-[rgba(82,183,136,0.35)] bg-green-pale px-6 py-8 text-center">
         <p className="font-display text-lg font-semibold text-green">Ticket submitted</p>
         <p className="mt-2 text-sm text-text-muted">
-          Your ticket was sent to{' '}
-          <a href="mailto:arashid@questrock.com" className="text-green-mid underline">
-            arashid@questrock.com
-          </a>
-          {' '}(Head of Systems). You should get a confirmation shortly.
+          Your ticket was submitted. You should get a confirmation shortly.
         </p>
         <button
           type="button"
@@ -162,14 +158,6 @@ export function SupportForm() {
       >
         {state === 'submitting' ? 'Sending…' : 'Submit IT ticket'}
       </button>
-
-      <p className="text-xs text-text-muted">
-        Tickets route to{' '}
-        <a href="mailto:arashid@questrock.com" className="text-green-mid underline">
-          arashid@questrock.com
-        </a>{' '}
-        (Head of Systems) via Formspree. For password resets on external systems (Shape, LendingPad), include your QuestRock email.
-      </p>
     </form>
   );
 }

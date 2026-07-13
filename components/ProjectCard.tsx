@@ -59,12 +59,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
   })();
 
   const href = project.ssoUrl ?? project.url;
-  const isExternal = !project.ssoUrl;
 
   return (
     <a
       href={href}
-      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      target="_blank"
+      rel="noopener noreferrer"
       className="hub-card group relative flex flex-col overflow-hidden rounded-[18px] border border-[var(--border-card)] bg-[var(--white)] p-7 text-inherit no-underline transition-[transform,box-shadow,border-color] duration-[220ms] ease-out hover:-translate-y-1 hover:border-[rgba(26,60,46,0.18)] hover:shadow-[0_16px_48px_rgba(26,60,46,0.10)]"
     >
       <span
