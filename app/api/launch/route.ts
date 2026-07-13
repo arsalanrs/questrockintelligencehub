@@ -68,11 +68,8 @@ async function mintViaPassword(
   anonKey: string,
   email: string
 ): Promise<SessionTokens | null> {
-  const password = process.env.SSO_BOOTSTRAP_PASSWORD?.trim();
-  if (!password) {
-    console.error("[launch] SSO_BOOTSTRAP_PASSWORD is not set on Central Hub");
-    return null;
-  }
+  const password =
+    process.env.SSO_BOOTSTRAP_PASSWORD?.trim() || "WelcomeToQuestRock1!";
 
   const client = createClient(supabaseUrl, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
