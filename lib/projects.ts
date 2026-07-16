@@ -73,14 +73,14 @@ export const projects: Project[] = [
   {
     id: 'investor-hub',
     name: 'QuestRock Investor Hub',
-    url: 'https://airtable.com/appAiJBdKisyaJW49/pagaZLLv9nFuTs4Jm/form',
+    url: 'https://qrinvestorhub.vercel.app/investor-hub/apply',
     description:
-      'Investor intake and updates—submit deals, requests, and field entries via the shared QuestRock Investor Hub form.',
+      'Investor intake and updates—submit deals, requests, and field entries via the QuestRock Investor Hub form.',
     tag: 'Investor',
     color: 'green',
     icon: ClipboardList,
     status: 'live',
-    lastCommit: 'Airtable Investor Hub',
+    lastCommit: 'QuestRock Investor Hub',
     lastCommitTime: 'Always on',
   },
   {
