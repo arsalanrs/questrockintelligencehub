@@ -5,6 +5,7 @@ import { canAccessShapePhoneZap } from "@/lib/shapephonezap-access";
 import { canAccessCallTracker } from "@/lib/call-tracker-access";
 import { canAccessQRDashboard } from "@/lib/qrdashboard-access";
 import { canAccessVerificationBot } from "@/lib/verificationbot-access";
+import { canAccessInvestorHubOps } from "@/lib/investor-hub-access";
 
 /**
  * SSO launch route.
@@ -227,6 +228,35 @@ export async function GET(request: NextRequest) {
     const target = new URL("https://qrdashboard.vercel.app/auth/callback");
     target.searchParams.set("sso_at", session.access_token);
     target.searchParams.set("sso_rt", session.refresh_token);
+    return NextResponse.redirect(target.toString());
+  }
+
+  if (appId === "investor-hub-ops") {
+    let userRole: string | null = null;
+    const qrUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const qrKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    if (qrUrl && qrKey) {
+      const qrAdmin = createClient(qrUrl, qrKey, { auth: { persistSession: false } });
+      const { data: profile } = await qrAdmin
+        .from("users")
+        .select("role")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      userRole = profile?.role ?? null;
+    }
+    if (!canAccessInvestorHubOps(userRole, userEmail)) {
+      return new NextResponse(
+        "Investor Hub ops is limited to executives, managers, and loan officers.",
+        { status: 403 }
+      );
+    }
+    const callback =
+      process.env.INVESTOR_HUB_CALLBACK_URL?.trim()
+      ?? "https://qrinvestorhub.vercel.app/auth/callback";
+    const target = new URL(callback);
+    target.searchParams.set("sso_at", session.access_token);
+    target.searchParams.set("sso_rt", session.refresh_token);
+    target.searchParams.set("redirectTo", "/ops/investor-hub");
     return NextResponse.redirect(target.toString());
   }
 

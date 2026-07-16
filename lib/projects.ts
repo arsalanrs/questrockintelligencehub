@@ -14,12 +14,20 @@ import {
   Trophy,
 } from 'lucide-react';
 
+export type ProjectAction = {
+  label: string;
+  href: string;
+  external?: boolean;
+};
+
 export type Project = {
   id: string;
   name: string;
   url: string;
   /** When set, clicking the card uses this URL (SSO launch) instead of url. */
   ssoUrl?: string;
+  /** When set, card shows action buttons instead of a single launch link. */
+  actions?: ProjectAction[];
   description: string;
   tag: string;
   color: 'green' | 'blue';
@@ -74,8 +82,19 @@ export const projects: Project[] = [
     id: 'investor-hub',
     name: 'QuestRock Investor Hub',
     url: 'https://qrinvestorhub.vercel.app/investor-hub/apply',
+    actions: [
+      {
+        label: 'Ops',
+        href: '/api/launch?appId=investor-hub-ops',
+      },
+      {
+        label: 'Apply',
+        href: 'https://qrinvestorhub.vercel.app/investor-hub/apply',
+        external: true,
+      },
+    ],
     description:
-      'Investor intake and updates—submit deals, requests, and field entries via the QuestRock Investor Hub form.',
+      'Investor intake and ops—staff open Ops for all intakes (executives) or assigned deals (LOs). Share Apply for borrowers.',
     tag: 'Investor',
     color: 'green',
     icon: ClipboardList,

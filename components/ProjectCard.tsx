@@ -49,7 +49,7 @@ function ProjectIcons({ icons, color }: { icons: LucideIcon | [LucideIcon, Lucid
   );
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+function CardBody({ project }: { project: Project }) {
   const host = (() => {
     try {
       return new URL(project.url).hostname;
@@ -58,19 +58,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
     }
   })();
 
-  const href = project.ssoUrl ?? project.url;
-
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="hub-card group relative flex flex-col overflow-hidden rounded-[18px] border border-[var(--border-card)] bg-[var(--white)] p-7 text-inherit no-underline transition-[transform,box-shadow,border-color] duration-[220ms] ease-out hover:-translate-y-1 hover:border-[rgba(26,60,46,0.18)] hover:shadow-[0_16px_48px_rgba(26,60,46,0.10)]"
-    >
-      <span
-        className={`pointer-events-none absolute inset-x-0 top-0 h-[3px] rounded-t-[18px] ${accentBar[project.color]}`}
-        aria-hidden
-      />
+    <>
       <div className="mb-5 flex items-start justify-between">
         <div
           className={`flex h-[50px] w-[50px] items-center justify-center rounded-[14px] ${iconBg[project.color]}`}
@@ -99,11 +88,63 @@ export function ProjectCard({ project }: ProjectCardProps) {
         >
           {project.tag}
         </span>
-        <span className="flex items-center gap-1 text-sm font-medium text-green-mid transition-[gap] duration-200 group-hover:gap-2">
-          Launch
-          <ArrowUpRight className="h-4 w-4" strokeWidth={2} aria-hidden />
-        </span>
+        {project.actions ? (
+          <div className="flex items-center gap-2">
+            {project.actions.map(action => (
+              <a
+                key={action.label}
+                href={action.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className={`rounded-full px-3 py-1.5 text-sm font-medium no-underline transition-colors ${
+                  action.label === 'Ops'
+                    ? 'bg-green-mid text-white hover:bg-green'
+                    : 'border border-[var(--border-card)] bg-white text-green-mid hover:border-green-mid'
+                }`}
+              >
+                {action.label}
+              </a>
+            ))}
+          </div>
+        ) : (
+          <span className="flex items-center gap-1 text-sm font-medium text-green-mid transition-[gap] duration-200 group-hover:gap-2">
+            Launch
+            <ArrowUpRight className="h-4 w-4" strokeWidth={2} aria-hidden />
+          </span>
+        )}
       </div>
+    </>
+  );
+}
+
+export function ProjectCard({ project }: ProjectCardProps) {
+  if (project.actions?.length) {
+    return (
+      <div className="hub-card relative flex flex-col overflow-hidden rounded-[18px] border border-[var(--border-card)] bg-[var(--white)] p-7 text-inherit transition-[transform,box-shadow,border-color] duration-[220ms] ease-out hover:-translate-y-1 hover:border-[rgba(26,60,46,0.18)] hover:shadow-[0_16px_48px_rgba(26,60,46,0.10)]">
+        <span
+          className={`pointer-events-none absolute inset-x-0 top-0 h-[3px] rounded-t-[18px] ${accentBar[project.color]}`}
+          aria-hidden
+        />
+        <CardBody project={project} />
+      </div>
+    );
+  }
+
+  const href = project.ssoUrl ?? project.url;
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hub-card group relative flex flex-col overflow-hidden rounded-[18px] border border-[var(--border-card)] bg-[var(--white)] p-7 text-inherit no-underline transition-[transform,box-shadow,border-color] duration-[220ms] ease-out hover:-translate-y-1 hover:border-[rgba(26,60,46,0.18)] hover:shadow-[0_16px_48px_rgba(26,60,46,0.10)]"
+    >
+      <span
+        className={`pointer-events-none absolute inset-x-0 top-0 h-[3px] rounded-t-[18px] ${accentBar[project.color]}`}
+        aria-hidden
+      />
+      <CardBody project={project} />
     </a>
   );
 }
