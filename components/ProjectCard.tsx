@@ -96,7 +96,6 @@ function CardBody({ project }: { project: Project }) {
                 href={action.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={e => e.stopPropagation()}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium no-underline transition-colors ${
                   action.label === 'Ops'
                     ? 'bg-green-mid text-white hover:bg-green'
