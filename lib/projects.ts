@@ -88,13 +88,17 @@ export const projects: Project[] = [
         href: '/api/launch?appId=investor-hub-ops',
       },
       {
+        label: 'My Apply Link',
+        href: '/api/investor-hub/my-apply-link',
+      },
+      {
         label: 'Apply',
         href: 'https://qrinvestorhub.vercel.app/investor-hub/apply',
         external: true,
       },
     ],
     description:
-      'Investor intake and ops—staff open Ops for all intakes (executives) or assigned deals (LOs). Share Apply for borrowers.',
+      'Investor intake desk—open Ops with your Hub login to work leads (yours if you’re an LO; all leads for leadership). Use My Apply Link to send a borrower/investor through your attributed form.',
     tag: 'Investor',
     color: 'green',
     icon: ClipboardList,
