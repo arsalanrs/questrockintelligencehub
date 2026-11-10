@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { SignOutButton } from '@/components/SignOutButton';
+import { ToolsNav } from '@/components/ToolsNav';
 
 type HeaderProps = {
   liveCount: number;
@@ -48,6 +49,7 @@ export function Header({ liveCount, userName, userRole }: HeaderProps) {
                 </span>
               )}
             </div>
+            <ToolsNav />
             <Link
               href="/support"
               className="whitespace-nowrap text-xs font-normal text-white/55 transition-colors hover:text-white sm:text-sm"
